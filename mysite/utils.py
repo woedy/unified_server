@@ -28,3 +28,10 @@ def unique_user_id_generator(instance):
         return
     return user_id
 
+
+
+def generate_email_token():
+    code = ''
+    for i in range(4):
+        code += str(random.randint(0, 9))
+    return code

@@ -2,14 +2,16 @@ from django.conf import settings
 from django.contrib.auth.base_user import AbstractBaseUser, BaseUserManager
 from django.db import models
 from django.db.models import Q
-from django.db.models.signals import post_save
+from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
+from rest_framework.authtoken.models import Token
 
+from connects.models import Connect
 from mysite.utils import unique_user_id_generator
 
 
 class UserManager(BaseUserManager):
-    def create_user(self, email, last_name=None, first_name=None, password=None, is_active=True, is_staff=False, is_admin=False):
+    def create_user(self, email, username=None, last_name=None, first_name=None, password=None, is_active=True, is_staff=False, is_admin=False):
         if not email:
             raise ValueError("User must have an email address")
         if not password:
@@ -18,7 +20,8 @@ class UserManager(BaseUserManager):
         user_obj = self.model(
             email=self.normalize_email(email),
             first_name=first_name,
-            last_name=last_name
+            last_name=last_name,
+            username=username
         )
         user_obj.set_password(password)
         user_obj.staff = is_staff
@@ -39,12 +42,13 @@ class UserManager(BaseUserManager):
 
 
 
-    def create_superuser(self, email, last_name=None, first_name=None, password=None, ):
+    def create_superuser(self, email, username=None, last_name=None, first_name=None, password=None, ):
         user = self.create_user(
             email,
             password=password,
             first_name=first_name,
             last_name=last_name,
+            username=username,
             is_staff=True,
             is_admin=True
         )
@@ -61,14 +65,19 @@ class UserManager(BaseUserManager):
         return qs
 
 
-
 class User(AbstractBaseUser):
     user_id = models.CharField(max_length=255, blank=True, null=True, unique=True)
     email = models.EmailField(max_length=255, unique=True)
+    username = models.CharField(max_length=255, blank=True, null=True, unique=True)
     first_name = models.CharField(max_length=255, blank=True, null=True)
     last_name = models.CharField(max_length=255, blank=True, null=True)
-    phone = models.CharField(max_length=255, blank=True, null=True)
-    country = models.CharField(max_length=255, blank=True, null=True)
+
+    fcm_token = models.TextField(blank=True, null=True)
+
+
+
+    email_token = models.CharField(max_length=10, blank=True, null=True)
+    email_verified = models.BooleanField(default=False)
 
     is_active = models.BooleanField(default=True)
 
@@ -79,7 +88,7 @@ class User(AbstractBaseUser):
 
     USERNAME_FIELD = 'email'
 
-    REQUIRED_FIELDS = ['first_name', 'last_name']
+    REQUIRED_FIELDS = ['username','first_name', 'last_name']
 
     objects = UserManager()
 
@@ -114,7 +123,13 @@ class User(AbstractBaseUser):
 
 @receiver(post_save, sender=settings.AUTH_USER_MODEL)
 def create_auth_token(sender, instance=None, created=False, **kwargs):
+    if created:
+        Token.objects.create(user=instance)
+
+
+def pre_save_user_id_receiver(sender, instance, *args, **kwargs):
     if not instance.user_id:
         instance.user_id = unique_user_id_generator(instance)
 
+pre_save.connect(pre_save_user_id_receiver, sender=User)
 
