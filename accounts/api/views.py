@@ -13,9 +13,10 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from accounts.api.serializers import UserRegistrationSerializer
 from activities.models import AllActivity
 from connects.models import Connect
-from mysite.utils import generate_email_token
+from unifiedpro_am_proj.utils import generate_email_token
 from user_profile.models import UserProfile
 
 User = get_user_model()
@@ -25,6 +26,133 @@ User = get_user_model()
 @permission_classes([])
 @authentication_classes([])
 def register_user(request):
+
+    payload = {}
+    data = {}
+    errors = {}
+
+    if request.method == 'POST':
+        email = request.data.get('email', "").lower()
+        first_name = request.data.get('first_name', "")
+        last_name = request.data.get('last_name', "")
+        username = request.data.get('username', "")
+        phone = request.data.get('phone', "")
+        country = request.data.get('country', "")
+        password = request.data.get('password', "")
+        password2 = request.data.get('password2', "")
+
+
+        if not email:
+            errors['email'] = ['User Email is required.']
+        elif not is_valid_email(email):
+            errors['email'] = ['Valid email required.']
+        elif check_email_exist(email):
+            errors['email'] = ['Email already exists in our database.']
+
+        if not first_name:
+            errors['first_name'] = ['First Name is required.']
+
+        if not last_name:
+            errors['last_name'] = ['Last Name is required.']
+
+        if not username:
+            errors['username'] = ['Username is required.']
+
+        if not phone:
+            errors['phone'] = ['Phone number is required.']
+
+
+        if not country:
+            errors['country'] = ['Country is required.']
+
+
+        if not password:
+            errors['password'] = ['Password is required.']
+
+        if not password2:
+            errors['password2'] = ['Password2 is required.']
+
+        if password != password2:
+            errors['password'] = ['Passwords dont match.']
+
+        if not is_valid_password(password):
+            errors['password'] = ['Password must be at least 8 characters long\n- Must include at least one uppercase letter,\n- One lowercase letter, one digit,\n- And one special character']
+
+        if errors:
+            payload['message'] = "Errors"
+            payload['errors'] = errors
+            return Response(payload, status=status.HTTP_400_BAD_REQUEST)
+
+        serializer = UserRegistrationSerializer(data=request.data)
+        if serializer.is_valid():
+            user = serializer.save()
+            data["user_id"] = user.user_id
+            data["email"] = user.email
+            data["first_name"] = user.first_name
+            data["last_name"] = user.last_name
+            data["username"] = user.username
+
+            user_profile = UserProfile.objects.create(
+                user=user,
+                phone=phone,
+                country=country
+
+            )
+            user_profile.save()
+
+            data['phone'] = user_profile.phone
+            data['country'] = user_profile.country
+
+        token = Token.objects.get(user=user).key
+        data['token'] = token
+
+        email_token = generate_email_token()
+
+        user = User.objects.get(email=email)
+        user.email_token = email_token
+        user.save()
+
+        context = {
+            'email_token': email_token,
+            'email': user.email,
+            'first_name': user.first_name
+        }
+
+        txt_ = get_template("registration/emails/verify.txt").render(context)
+        html_ = get_template("registration/emails/verify.html").render(context)
+
+        subject = 'EMAIL CONFIRMATION CODE'
+        from_email = settings.DEFAULT_FROM_EMAIL
+        recipient_list = [user.email]
+
+        sent_mail = send_mail(
+            subject,
+            txt_,
+            from_email,
+            recipient_list,
+            html_message=html_,
+            fail_silently=False,
+        )
+
+        new_activity = AllActivity.objects.create(
+            user=user,
+            subject="User Registration",
+            body=user.email + " Just created an account."
+        )
+        new_activity.save()
+
+        payload['message'] = "Successful"
+        payload['data'] = data
+
+    return Response(payload)
+
+
+
+
+@api_view(['POST', ])
+@permission_classes([])
+@authentication_classes([])
+def register_userWORKING(request):
 
     payload = {}
     data = {}

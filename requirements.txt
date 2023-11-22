@@ -1,0 +1,14 @@
+asgiref
+Django
+djangorestframework
+Pillow
+pytz
+sqlparse
+psycopg2
+redis
+celery
+channels-redis
+requests
+pyfcm
+django-cors-headers
+daphne

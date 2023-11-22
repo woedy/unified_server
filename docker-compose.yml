@@ -1,0 +1,63 @@
+version: "3.8"
+services:
+
+  # Redis
+  redis:
+    image: redis:alpine
+    container_name: redis_d
+
+  # Database Postgres
+  db:
+    image: postgres
+    volumes:
+      - ./data/db:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=unifiedpro_am_proj
+      - POSTGRES_USER=unifiedpro_am_proj
+      - POSTGRES_PASSWORD=unifiedpro_am_proj
+    container_name: postgres_db_d
+
+  # Django Application
+  app3:
+    build: .
+    volumes:
+      - .:/django4
+      - ./static_cdn:/var/lib/static_cdn
+    ports:
+      - 84:84
+    image: app4:django
+    container_name: django4_app
+    command: python manage.py runserver 0.0.0.0:84
+    depends_on:
+      - db
+
+  # Celery Worker
+  celery:
+    restart: always
+    build:
+      context: .
+    command: celery -A unifiedpro_am_proj worker -l DEBUG
+    volumes:
+      - .:/django4
+    container_name: celery_d
+    depends_on:
+      - db
+      - redis
+      - app4
+
+  # Celery Beat
+  celery-beat:
+    restart: always
+    build:
+      context: .
+    command: celery -A unifiedpro_am_proj beat -l DEBUG
+    volumes:
+      - .:/django4
+    container_name: celery_beat_d
+    depends_on:
+      - db
+      - redis
+      - app4
+
+volumes:
+  static_cdn:

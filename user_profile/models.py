@@ -5,7 +5,7 @@ from django.db import models
 from django.db.models.signals import post_save
 
 from connects.models import Connect
-from mysite import settings
+from unifiedpro_am_proj import settings
 
 User = settings.AUTH_USER_MODEL
 

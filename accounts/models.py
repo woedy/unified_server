@@ -7,7 +7,7 @@ from django.dispatch import receiver
 from rest_framework.authtoken.models import Token
 
 from connects.models import Connect
-from mysite.utils import unique_user_id_generator
+from unifiedpro_am_proj.utils import unique_user_id_generator
 
 
 class UserManager(BaseUserManager):

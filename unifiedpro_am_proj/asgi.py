@@ -5,9 +5,9 @@ from channels.routing import ProtocolTypeRouter, URLRouter
 from channels.security.websocket import AllowedHostsOriginValidator
 from django.core.asgi import get_asgi_application
 
-from mysite import routing
+from unifiedpro_am_proj import routing
 
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "mysite.settings")
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "unifiedpro_am_proj.settings")
 
 django_asgi_app = get_asgi_application()
 
