@@ -24,6 +24,11 @@ urlpatterns = [
 
     path('api/accounts/', include('accounts.api.urls', 'accounts_api')),
     path('api/user-profile/', include('user_profile.api.urls', 'user_profile_api')),
+    path('api/home-page/', include('homepage.api.urls', 'homepage_api')),
+    path('api/events/', include('events.api.urls', 'events_api')),
+    path('api/teams/', include('teams.api.urls', 'teams_api')),
+    path('api/games/', include('games.api.urls', 'games_api')),
+    path('api/players/', include('players.api.urls', 'players_api')),
 
 ]
 

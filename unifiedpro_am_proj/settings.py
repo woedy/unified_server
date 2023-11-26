@@ -25,7 +25,7 @@ SECRET_KEY = "django-insecure-!=v^lii$s4@-fe$(b-5qioc99a%c#y4j=##8j7ruzytfvoq1=^
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["*"]
+ALLOWED_HOSTS = ["143.42.21.193", "127.0.0.1", "0.0.0.0"]
 
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'box.teamalfy.co.uk'
@@ -54,7 +54,15 @@ INSTALLED_APPS = [
     "accounts",
     "user_profile",
     "connects",
-    "activities"
+    "activities",
+    "events",
+    "teams",
+    "homepage",
+    "leaderboards",
+    "games",
+    "players",
+    "membership",
+    "supports",
 ]
 
 AUTH_USER_MODEL = 'accounts.User'
@@ -67,6 +75,9 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+
+    'django.middleware.common.CommonMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
 ]
 
 ROOT_URLCONF = "unifiedpro_am_proj.urls"
@@ -113,6 +124,11 @@ DATABASES = {
 #         'PORT': 5432,
 #      }
 # }
+
+
+
+CELERY_BROKER_URL = "redis://redis:6379"
+CELERY_RESULT_BACKEND = "redis://redis:6379"
 
 
 # Password validation

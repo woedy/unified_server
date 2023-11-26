@@ -80,6 +80,7 @@ class User(AbstractBaseUser):
     email_verified = models.BooleanField(default=False)
 
     is_active = models.BooleanField(default=True)
+    is_online = models.BooleanField(default=True)
 
     staff = models.BooleanField(default=False)
     admin = models.BooleanField(default=False)

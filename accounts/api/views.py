@@ -149,140 +149,6 @@ def register_user(request):
 
 
 
-@api_view(['POST', ])
-@permission_classes([])
-@authentication_classes([])
-def register_userWORKING(request):
-
-    payload = {}
-    data = {}
-    errors = {}
-
-    if request.method == 'POST':
-        email = request.data.get('email', "").lower()
-        first_name = request.data.get('first_name', "")
-        last_name = request.data.get('last_name', "")
-        username = request.data.get('username', "")
-        phone = request.data.get('phone', "")
-        country = request.data.get('country', "")
-        password = request.data.get('password', "")
-        password2 = request.data.get('password2', "")
-
-
-        if not email:
-            errors['email'] = ['User Email is required.']
-        elif not is_valid_email(email):
-            errors['email'] = ['Valid email required.']
-        elif check_email_exist(email):
-            errors['email'] = ['Email already exists in our database.']
-
-        if not first_name:
-            errors['first_name'] = ['First Name is required.']
-
-        if not last_name:
-            errors['last_name'] = ['Last Name is required.']
-
-        if not username:
-            errors['username'] = ['Username is required.']
-
-        if not phone:
-            errors['phone'] = ['Phone number is required.']
-
-
-        if not country:
-            errors['country'] = ['Country is required.']
-
-
-        if not password:
-            errors['password'] = ['Password is required.']
-
-        if not password2:
-            errors['password2'] = ['Password2 is required.']
-
-        if password != password2:
-            errors['password'] = ['Passwords dont match.']
-
-        if not is_valid_password(password):
-            errors['password'] = ['Password must be at least 8 characters long\n- Must include at least one uppercase letter,\n- One lowercase letter, one digit,\n- And one special character']
-
-        if errors:
-            payload['message'] = "Errors"
-            payload['errors'] = errors
-            return Response(payload, status=status.HTTP_400_BAD_REQUEST)
-
-        try:
-            new_user = User.objects.create(
-                email=email,
-                username=username,
-                first_name=first_name,
-                last_name=last_name,
-            )
-
-            try:
-                user_profile = UserProfile.objects.get(user=new_user)
-            except UserProfile.DoesNotExist:
-                user_profile = UserProfile.objects.create(user=new_user)
-
-            try:
-                token = Token.objects.get(user=new_user)
-            except Token.DoesNotExist:
-                token = Token.objects.create(user=new_user)
-
-            user_profile.phone=phone
-            user_profile.country=country
-            user_profile.save()
-
-            data['user_id'] = new_user.user_id
-            data['first_name'] = new_user.first_name
-            data['last_name'] = new_user.last_name
-            data['username'] = new_user.username
-            data['phone'] = user_profile.phone
-            data['country'] = user_profile.country
-            data["token"] = token.key
-
-            email_token = generate_email_token()
-
-            user = User.objects.get(email=email)
-            user.email_token = email_token
-            user.save()
-
-            context = {
-                'email_token': email_token,
-                'email': user.email,
-                'first_name': user.first_name
-            }
-
-            txt_ = get_template("registration/emails/verify.txt").render(context)
-            html_ = get_template("registration/emails/verify.html").render(context)
-
-            subject = 'EMAIL CONFIRMATION CODE'
-            from_email = settings.DEFAULT_FROM_EMAIL
-            recipient_list = [user.email]
-
-            sent_mail = send_mail(
-                subject,
-                txt_,
-                from_email,
-                recipient_list,
-                html_message=html_,
-                fail_silently=False,
-            )
-
-
-            # Add new ACTIVITY
-            new_activity = AllActivity.objects.create(
-                user=User.objects.get(id=1),
-                subject="New user registered",
-                body=f"New User {new_user.email} is just created."
-            )
-            new_activity.save()
-        except IntegrityError:
-            errors['email'] = ['Email already exists in our database.']
-
-        payload['message'] = "Successful"
-        payload['data'] = data
-
-    return Response(payload)
 
 
 def check_email_exist(email):
@@ -417,9 +283,6 @@ class UserLogin(APIView):
         data = {}
         errors = {}
 
-        email_errors = []
-        password_errors = []
-        fcm_token_errors = []
 
         email = request.data.get('email', '').lower()
         password = request.data.get('password', '')
@@ -434,19 +297,24 @@ class UserLogin(APIView):
         if not fcm_token:
             errors['fcm_token'] = ['FCM device token is required.']
 
+        try:
+            qs = User.objects.filter(email=email)
+        except User.DoesNotExist:
+            errors['email'] = ['User does not exist.']
 
-        qs = User.objects.filter(email=email)
+
+
         if qs.exists():
             not_active = qs.filter(email_verified=False)
             if not_active:
-                reconfirm_msg = "resend confirmation email."
-                msg1 = "Please check your email to confirm your account or " + reconfirm_msg.lower()
-                errors['email'] = msg1
+                errors['email'] = ["Please check your email to confirm your account or resend confirmation email."]
 
         if not check_password(email, password):
             errors['password'] = ['Invalid Credentials']
 
         user = authenticate(email=email, password=password)
+
+
         if not user:
             errors['email'] = ['Invalid Credentials']
 
@@ -490,8 +358,6 @@ class UserLogin(APIView):
         )
         new_activity.save()
 
-
-
         return Response(payload, status=status.HTTP_200_OK)
 
 
@@ -499,8 +365,8 @@ def check_password(email, password):
 
     try:
         user = User.objects.get(email=email)
-        return  user.check_password(password)
-    except User.DoesNotExisst:
+        return user.check_password(password)
+    except User.DoesNotExist:
         return False
 
 @api_view(['POST', ])

@@ -68,6 +68,13 @@ class UserProfile(models.Model):
 
 
     position = models.CharField(max_length=100, choices=POSITIONS_CHOICES, blank=True, null=True)
+    points_per_game = models.DecimalField(default=0.00, null=True, blank=True, max_digits=5,decimal_places=3)
+    assists_per_game = models.DecimalField(default=0.00, null=True, blank=True, max_digits=5,decimal_places=3)
+    rebounds_per_game = models.DecimalField(default=0.00, null=True, blank=True, max_digits=5,decimal_places=3)
+
+    games_played = models.IntegerField(default=0, null=True, blank=True)
+    games_won = models.IntegerField(default=0, null=True, blank=True)
+    games_lost = models.IntegerField(default=0, null=True, blank=True)
 
 
     profile_complete = models.BooleanField(default=False)
