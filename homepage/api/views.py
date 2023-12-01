@@ -1,12 +1,14 @@
 from django.contrib.auth import get_user_model
 from rest_framework import status
+from rest_framework.authentication import TokenAuthentication
 from rest_framework.decorators import authentication_classes, api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 User = get_user_model()
 @api_view(['GET', ])
-@permission_classes([])
-@authentication_classes([])
+@permission_classes([IsAuthenticated, ])
+@authentication_classes([TokenAuthentication, ])
 def get_home_page_data(request):
     payload = {}
     data = {}
@@ -19,9 +21,7 @@ def get_home_page_data(request):
     global_player_leaderboard = []
     upcoming_events = []
 
-
-
-    user_id = request.data.get('user_id', '').lower()
+    user_id = request.query_params.get('user_id', None)
 
     if not user_id:
         errors["user_id"] = ['User ID is required']

@@ -3,12 +3,38 @@ from rest_framework import serializers
 
 from connects.models import Connect
 from events.models import Event
-from teams.models import Team
+from teams.models import Team, TeamMember
+from user_profile.models import UserProfile
 
 User = get_user_model()
 
 
-class TeamSerializers(serializers.ModelSerializer):
+class TeamOwnerProfileSerializers(serializers.ModelSerializer):
+
+    class Meta:
+        model = UserProfile
+        fields = ['photo',]
+
+
+class TeamOwnerSerializers(serializers.ModelSerializer):
+    personal_info = TeamOwnerProfileSerializers(many=False)
+
+    class Meta:
+        model = User
+        fields = ['user_id', 'first_name', 'last_name', 'personal_info']
+
+
+
+class TeamMemberSerializers(serializers.ModelSerializer):
+    member = TeamOwnerSerializers(many=False)
+
+    class Meta:
+        model = TeamMember
+        fields = ['id', 'member', ]
+
+
+
+class AllTeamsSerializers(serializers.ModelSerializer):
 
     class Meta:
         model = Team
@@ -18,7 +44,30 @@ class TeamSerializers(serializers.ModelSerializer):
             'team_logo',
             'team_about',
 
-            'selected_console',
+            'selected_consoles',
+
+
+
+            'wins',
+            'loss',
+        ]
+
+
+
+
+class TeamSerializers(serializers.ModelSerializer):
+    team_owner = TeamOwnerSerializers(many=False)
+    team_members = TeamMemberSerializers(many=True)
+
+    class Meta:
+        model = Team
+        fields = [
+            'team_id',
+            'team_name',
+            'team_logo',
+            'team_about',
+
+            'selected_consoles',
 
             'points_per_game',
             'assists_per_game',
@@ -30,7 +79,6 @@ class TeamSerializers(serializers.ModelSerializer):
             'team_owner',
 
             'team_members',
-            'team_events',
             'team_gallery',
             'team_schedules',
             'team_lineups',

@@ -1,13 +1,14 @@
 from django.urls import path
 
-from accounts.api.views import register_user, verify_user_email, connects_endpoint, UserLogin, set_position_view
-from events.api.views import get_all_events
-from teams.api.views import get_team_data
+
+from teams.api.views import get_team_data, create_team, get_team_details_data
 
 app_name = 'teams'
 
 urlpatterns = [
     path('', get_team_data, name="get_team_data"),
+    path('team-details', get_team_details_data, name="get_team_details_data"),
+    path('create-team', create_team, name="create_team"),
 
 
 ]

@@ -8,29 +8,22 @@ from user_profile.models import UserProfile
 User = get_user_model()
 
 
-class EventSerializers(serializers.ModelSerializer):
+class EventCreatorProfileSerializers(serializers.ModelSerializer):
 
     class Meta:
-        model = Event
-        fields = [
-            'event_id',
-            'event_title',
-            'league',
-            'event_description',
-            'event_cover',
-            'status',
-            'event_type',
-            'price',
-            'event_start',
-            'event_end',
-            'event_rescheduled_at',
-            'event_cancelled_at',
-            'event_creator',
-            'event_sign_ups',
-            'event_consoles',
-            'event_teams',
-            'created_at',
-        ]
+        model = UserProfile
+        fields = ['photo',]
+
+
+class EventCreatorSerializers(serializers.ModelSerializer):
+    personal_info = EventCreatorProfileSerializers(many=False)
+
+    class Meta:
+        model = User
+        fields = ['user_id', 'first_name', 'last_name', 'personal_info']
+
+
+
 
 class LeagueEventSerializers(serializers.ModelSerializer):
 
@@ -50,7 +43,6 @@ class LeagueEventSerializers(serializers.ModelSerializer):
             'event_rescheduled_at',
             'event_cancelled_at',
             'event_creator',
-            'event_sign_ups',
             'event_consoles',
             'event_teams',
 
@@ -69,6 +61,7 @@ class AllEventSerializers(serializers.ModelSerializer):
         fields = [
             'event_id',
             'event_title',
+            'event_description',
             'event_type',
             'event_start',
             'event_cover',
@@ -131,5 +124,29 @@ class AllLeagueSerializers(serializers.ModelSerializer):
             'league_manager',
         ]
 
+
+
+class EventSerializers(serializers.ModelSerializer):
+    event_creator = EventCreatorSerializers(many=False)
+    league = LeagueSerializers(many=False)
+    class Meta:
+        model = Event
+        fields = [
+            'event_id',
+            'event_title',
+            'league',
+            'event_description',
+            'event_cover',
+            'status',
+            'event_type',
+            'price',
+            'event_start',
+            'event_end',
+            'event_rescheduled_at',
+            'event_cancelled_at',
+            'event_creator',
+            'event_consoles',
+            'created_at',
+        ]
 
 

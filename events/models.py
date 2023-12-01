@@ -5,6 +5,7 @@ from django.contrib.auth import get_user_model
 from django.db import models
 from django.db.models.signals import pre_save
 
+from teams.models import Team
 from unifiedpro_am_proj.utils import unique_event_id_generator, unique_league_id_generator
 
 User = get_user_model()
@@ -96,6 +97,7 @@ class Event(models.Model):
     status = models.CharField(max_length=255, default="Pending", null=True, blank=True, choices=STATUS_CHOICE)
     event_type = models.CharField(max_length=255, null=True, blank=True, choices=EVENT_TYPE_CHOICE)
     price = models.CharField(max_length=255, default="0000", null=True, blank=True)
+    sign_up_fee = models.CharField(max_length=255, default="0000", null=True, blank=True)
     event_cover = models.ImageField(upload_to=upload_event_image_path, null=True, blank=True)
 
     event_consoles = models.CharField(max_length=1000, blank=True, null=True)
@@ -107,8 +109,6 @@ class Event(models.Model):
     event_cancelled_at = models.DateTimeField(null=True, blank=True)
 
     event_creator = models.ForeignKey(User, on_delete=models.SET_NULL, null=True,  blank=True,)
-    event_sign_ups = models.ManyToManyField(User, blank=True, related_name="event_signups")
-    event_teams = models.ManyToManyField(User, blank=True, related_name="event_teams")
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -121,3 +121,7 @@ def pre_save_event_id_receiver(sender, instance, *args, **kwargs):
 pre_save.connect(pre_save_event_id_receiver, sender=Event)
 
 
+class EventSignUp(models.Model):
+    event = models.ForeignKey(Event, on_delete=models.CASCADE, null=True,  blank=True, related_name='event_signups')
+    team = models.ForeignKey(Team, on_delete=models.CASCADE, null=True,  blank=True, related_name='event_teams')
+    players = models.ManyToManyField(User,  blank=True, related_name='event_team_players')

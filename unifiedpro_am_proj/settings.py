@@ -25,7 +25,7 @@ SECRET_KEY = "django-insecure-!=v^lii$s4@-fe$(b-5qioc99a%c#y4j=##8j7ruzytfvoq1=^
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["143.42.21.193", "127.0.0.1", "0.0.0.0"]
+ALLOWED_HOSTS = ["143.42.21.193", "127.0.0.1", "0.0.0.0", "localhost"]
 
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'box.teamalfy.co.uk'
@@ -63,6 +63,7 @@ INSTALLED_APPS = [
     "players",
     "membership",
     "supports",
+    "payments"
 ]
 
 AUTH_USER_MODEL = 'accounts.User'

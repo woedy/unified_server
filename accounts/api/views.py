@@ -448,7 +448,6 @@ def set_position_view(request):
     data = {}
     errors = {}
 
-
     if request.method == "POST":
         user_id = request.data.get("user_id")
         position = request.data.get("position")
@@ -458,41 +457,32 @@ def set_position_view(request):
 
         if not user_id:
             errors["user_id"] = ['User Id is required.']
+        else:
+            try:
+                user = User.objects.get(user_id=user_id)
+            except User.DoesNotExist:
+                errors["user_id"] = ['User does not exist.']
 
-        # Retrieve the user
-        user = User.objects.get(user_id=user_id)
+            if "user_id" not in errors:
+                user_profile, created = UserProfile.objects.get_or_create(user=user)
 
-        try:
-            user_profile = UserProfile.objects.get(user=user)
-        except UserProfile.DoesNotExist:
-            user_profile = UserProfile.objects.create(user=user)
+                user_profile.position = position
+                user_profile.save()
 
-        user_profile.position = position
-        user_profile.save()
+                token, created = Token.objects.get_or_create(user=user)
 
-        try:
-            token = Token.objects.get(user=user)
-        except Token.DoesNotExist:
-            token = Token.objects.create(user=user)
-
-        data["user_id"] = user.user_id
-        data["email"] = user.email
-        data["first_name"] = user.first_name
-        data["last_name"] = user.last_name
-        data["token"] = token.key
-
-
-
+                data["user_id"] = user.user_id
+                data["email"] = user.email
+                data["first_name"] = user.first_name
+                data["last_name"] = user.last_name
+                data["token"] = token.key
 
     if errors:
         payload['message'] = "Errors"
         payload['errors'] = errors
         return Response(payload, status=status.HTTP_400_BAD_REQUEST)
 
-
     payload['message'] = "Successful"
     payload['data'] = data
 
     return Response(payload)
-
-
