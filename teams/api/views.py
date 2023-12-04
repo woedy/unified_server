@@ -17,10 +17,76 @@ from user_profile.models import UserProfile
 
 User = get_user_model()
 
+
+
+
 @api_view(['GET', ])
 @permission_classes([IsAuthenticated, ])
 @authentication_classes([TokenAuthentication, ])
 def get_team_data(request):
+    class CustomPagination(PageNumberPagination):
+        page_size = 10
+        page_size_query_param = 'page_size'
+        max_page_size = 100
+
+    payload = {}
+    data = {}
+    errors = {}
+
+    if request.method == 'GET':
+        user_id = request.query_params.get('user_id', None)
+        page_number = request.query_params.get('page', 1)  # Default to page 1 if not provided
+        search_query = request.query_params.get('q', None)
+
+        if not user_id:
+            errors["user_id"] = ['User ID is required']
+            payload['message'] = "Errors"
+            payload['errors'] = errors
+            return Response(payload, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            user = User.objects.get(user_id=user_id)
+        except User.DoesNotExist:
+            errors["user_id"] = ['User does not exist.']
+            payload['message'] = "Errors"
+            payload['errors'] = errors
+            return Response(payload, status=status.HTTP_400_BAD_REQUEST)
+
+        # Fetch teams the user belongs to using TeamMember model
+        user_teams = Team.objects.filter(team_members__member=user)
+        user_teams_serializer = AllTeamsSerializers(user_teams, many=True)
+
+        all_teams = Team.objects.all().order_by("-created_at")
+
+        if search_query:
+            all_teams = all_teams.filter(
+                Q(team_name__icontains=search_query) |
+                Q(team_about__icontains=search_query)
+            )
+
+        paginator = CustomPagination()
+        paginated_result = paginator.paginate_queryset(all_teams, request)
+        all_teams_serializer = AllTeamsSerializers(paginated_result, many=True)
+
+        data["all_teams"] = all_teams_serializer.data
+        data["total_pages"] = paginator.page.paginator.num_pages  # Get total number of pages
+        data["current_page"] = paginator.page.number  # Get current page number
+
+        # Add the user's teams to the response if they exist
+        if user_teams.exists():
+            data["my_teams"] = user_teams_serializer.data
+        else:
+            data["my_teams"] = []
+
+        payload['message'] = "Successful"
+        payload['data'] = data
+
+    return paginator.get_paginated_response(data)
+
+@api_view(['GET', ])
+@permission_classes([IsAuthenticated, ])
+@authentication_classes([TokenAuthentication, ])
+def get_team_data22222(request):
     class CustomPagination(PageNumberPagination):
         page_size = 10
         page_size_query_param = 'page_size'
