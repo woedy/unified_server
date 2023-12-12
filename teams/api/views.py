@@ -16,7 +16,7 @@ from connects.models import Connect
 from events.api.serializers import EventSerializers
 from events.models import Event
 from teams.api.serializers import TeamSerializers, AllTeamsSerializers
-from teams.models import Team, TeamPlayerInvite
+from teams.models import Team, TeamPlayerInvite, TeamPlayerInviteEmail
 from user_profile.models import UserProfile
 
 User = get_user_model()
@@ -246,10 +246,103 @@ def invite_player_view(request):
 
     if request.method == 'POST':
         user_id = request.data.get('user_id', None)
+        invited_player_id = request.data.get('invited_player_id', None)
         team_id = request.data.get('team_id', None)
 
         if not user_id:
             errors["user_id"] = ['User ID is required']
+
+        if not team_id:
+            errors["team_id"] = ['Team ID is required']
+
+        if not invited_player_id:
+            errors["invited_player_id"] = ['Invited player id is required']
+
+
+        try:
+            user = User.objects.get(user_id=user_id)
+        except User.DoesNotExist:
+            errors["user_id"] = ['User does not exist.']
+
+        try:
+            inv_player = User.objects.get(user_id=invited_player_id)
+        except User.DoesNotExist:
+            errors["invited_player_id"] = ['Invited player does not exist.']
+#
+        try:
+            team = Team.objects.get(team_id=team_id)
+        except Team.DoesNotExist:
+            errors["team_id"] = ['Team does not exist.']
+
+        if errors:
+            payload['message'] = "Errors"
+            payload['errors'] = errors
+            return Response(payload, status=status.HTTP_400_BAD_REQUEST)
+
+
+        player_invite = TeamPlayerInvite.objects.create(
+            team=team,
+            player=inv_player,
+            inviter=user,
+        )
+
+
+
+        context = {
+            'team_name': team.team_name,
+            'email': user.email,
+            'inv_first_name': inv_player.first_name,
+            'inviter': user.first_name
+        }
+
+        txt_ = get_template("teams/invite_player.txt").render(context)
+        html_ = get_template("teams/invite_player.html").render(context)
+
+        subject = 'TEAM INVITATION'
+        from_email = settings.DEFAULT_FROM_EMAIL
+        recipient_list = [inv_player.email]
+
+        sent_mail = send_mail(
+            subject,
+            txt_,
+            from_email,
+            recipient_list,
+            html_message=html_,
+            fail_silently=False,
+        )
+
+        new_activity = AllActivity.objects.create(
+            user=user,
+            subject="Team Invitation",
+            body=team.team_name + " Just invited " + inv_player.email
+        )
+        new_activity.save()
+
+    payload['message'] = "Successful"
+    payload['data'] = data
+    return Response(payload, status=status.HTTP_201_CREATED)
+
+
+
+@api_view(['POST', ])
+@permission_classes([IsAuthenticated, ])
+@authentication_classes([TokenAuthentication, ])
+def invite_player_email_view(request):
+    payload = {}
+    errors = {}
+    data = {}
+
+    if request.method == 'POST':
+        user_id = request.data.get('user_id', None)
+        invited_player_email = request.data.get('user_id', None)
+        team_id = request.data.get('team_id', None)
+
+        if not user_id:
+            errors["user_id"] = ['User ID is required']
+
+
+        if not invited_player_email:
+            errors["invited_player_email"] = ['Invited player email is required']
 
         if not team_id:
             errors["team_id"] = ['Team ID is required']
@@ -271,9 +364,11 @@ def invite_player_view(request):
             return Response(payload, status=status.HTTP_400_BAD_REQUEST)
 
 
-        player_invite = TeamPlayerInvite.objects.create(
+        player_invite = TeamPlayerInviteEmail.objects.create(
             team=team,
-            player=user
+            player_email=invited_player_email,
+            inviter=user,
+
         )
 
 
@@ -281,11 +376,12 @@ def invite_player_view(request):
         context = {
             'team_name': team.team_name,
             'email': user.email,
-            'first_name': user.first_name
+            'first_name': user.first_name,
+            'invited_player_email': invited_player_email
         }
 
-        txt_ = get_template("teams/invite_player.txt").render(context)
-        html_ = get_template("teams/invite_player.html").render(context)
+        txt_ = get_template("teams/invite_player_email.txt").render(context)
+        html_ = get_template("teams/invite_player_email.html").render(context)
 
         subject = 'TEAM INVITATION'
         from_email = settings.DEFAULT_FROM_EMAIL
@@ -303,7 +399,7 @@ def invite_player_view(request):
         new_activity = AllActivity.objects.create(
             user=user,
             subject="Team Invitation",
-            body=team.team_name + " Just invited " + user.email
+            body=team.team_name + " Just invited " + invited_player_email
         )
         new_activity.save()
 

@@ -91,6 +91,14 @@ class TeamLineUp(models.Model):
     player = models.ForeignKey(User, null=True, blank=True, on_delete=models.SET_NULL)
 
 
+
 class TeamPlayerInvite(models.Model):
     team = models.ForeignKey(Team, on_delete=models.CASCADE, related_name="team_player_invite")
-    player = models.ForeignKey(User, null=True, blank=True, on_delete=models.SET_NULL)
+    player = models.ForeignKey(User, null=True, blank=True, on_delete=models.SET_NULL, related_name="invited_player")
+    inviter = models.ForeignKey(User, null=True, blank=True, on_delete=models.SET_NULL, related_name="inviter_player")
+
+
+class TeamPlayerInviteEmail(models.Model):
+    team = models.ForeignKey(Team, on_delete=models.CASCADE, related_name="team_player_invite_email")
+    player_email = models.EmailField(max_length=255, unique=True,)
+    inviter = models.ForeignKey(User, null=True, blank=True, on_delete=models.SET_NULL, related_name="email_inviter_player")

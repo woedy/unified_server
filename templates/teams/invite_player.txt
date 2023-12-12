@@ -1,6 +1,6 @@
-Hello {{ first_name }},
+Hello {{ inv_first_name }},
 
-You are invited to join {{team_name}} on Unifiedpro Am
+You are invited by {{inviter}} to join {{team_name}} on Unifiedpro Am
 
 
 Thank you,
