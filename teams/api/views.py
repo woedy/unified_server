@@ -1,12 +1,16 @@
 from django.contrib.auth import get_user_model
+from django.core.mail import send_mail
 from django.db.models import Q
+from django.template.loader import get_template
 from rest_framework import status
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.decorators import authentication_classes, permission_classes, api_view
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from django.conf import settings
 
+from activities.models import AllActivity
 from connects.api.serializers import ConnectSerializers
 from connects.models import Connect
 from events.api.serializers import EventSerializers
@@ -271,6 +275,37 @@ def invite_player_view(request):
             team=team,
             player=user
         )
+
+
+
+        context = {
+            'team_name': team.team_name,
+            'email': user.email,
+            'first_name': user.first_name
+        }
+
+        txt_ = get_template("teams/invite_player.txt").render(context)
+        html_ = get_template("teams/invite_player.html").render(context)
+
+        subject = 'TEAM INVITATION'
+        from_email = settings.DEFAULT_FROM_EMAIL
+        recipient_list = [user.email]
+
+        sent_mail = send_mail(
+            subject,
+            txt_,
+            from_email,
+            recipient_list,
+            html_message=html_,
+            fail_silently=False,
+        )
+
+        new_activity = AllActivity.objects.create(
+            user=user,
+            subject="Team Invitation",
+            body=team.team_name + " Just invited " + user.email
+        )
+        new_activity.save()
 
     payload['message'] = "Successful"
     payload['data'] = data

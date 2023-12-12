@@ -1,0 +1,7 @@
+Hello {{ first_name }},
+
+You are invited to join {{team_name}} on Unifiedpro Am
+
+
+Thank you,
+Unifiedpro Am

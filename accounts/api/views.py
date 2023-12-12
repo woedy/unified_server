@@ -118,8 +118,8 @@ def register_user(request):
             'first_name': user.first_name
         }
 
-        txt_ = get_template("registration/emails/verify.txt").render(context)
-        html_ = get_template("registration/emails/verify.html").render(context)
+        txt_ = get_template("registration/emails/invite_player.txt").render(context)
+        html_ = get_template("registration/emails/invite_player.html").render(context)
 
         subject = 'EMAIL CONFIRMATION CODE'
         from_email = settings.DEFAULT_FROM_EMAIL
