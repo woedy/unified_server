@@ -12,7 +12,7 @@ from connects.models import Connect
 from events.api.serializers import EventSerializers
 from events.models import Event
 from teams.api.serializers import TeamSerializers, AllTeamsSerializers
-from teams.models import Team
+from teams.models import Team, TeamPlayerInvite
 from user_profile.models import UserProfile
 
 User = get_user_model()
@@ -228,3 +228,51 @@ def create_team(request):
         payload['message'] = "Errors"
         payload['errors'] = errors
         return Response(payload, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+
+@api_view(['POST', ])
+@permission_classes([IsAuthenticated, ])
+@authentication_classes([TokenAuthentication, ])
+def invite_player_view(request):
+    payload = {}
+    errors = {}
+    data = {}
+
+    if request.method == 'POST':
+        user_id = request.data.get('user_id', None)
+        team_id = request.data.get('team_id', None)
+
+        if not user_id:
+            errors["user_id"] = ['User ID is required']
+
+        if not team_id:
+            errors["team_id"] = ['Team ID is required']
+
+
+        try:
+            user = User.objects.get(user_id=user_id)
+        except User.DoesNotExist:
+            errors["user_id"] = ['User does not exist.']
+#
+        try:
+            team = Team.objects.get(team_id=team_id)
+        except Team.DoesNotExist:
+            errors["team_id"] = ['Team does not exist.']
+
+        if errors:
+            payload['message'] = "Errors"
+            payload['errors'] = errors
+            return Response(payload, status=status.HTTP_400_BAD_REQUEST)
+
+
+        player_invite = TeamPlayerInvite.objects.create(
+            team=team,
+            player=user
+        )
+
+    payload['message'] = "Successful"
+    payload['data'] = data
+    return Response(payload, status=status.HTTP_201_CREATED)
+

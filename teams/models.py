@@ -89,3 +89,8 @@ class TeamSchedule(models.Model):
 class TeamLineUp(models.Model):
     team = models.ForeignKey(Team, on_delete=models.CASCADE, related_name="team_lineups")
     player = models.ForeignKey(User, null=True, blank=True, on_delete=models.SET_NULL)
+
+
+class TeamPlayerInvite(models.Model):
+    team = models.ForeignKey(Team, on_delete=models.CASCADE, related_name="team_player_invite")
+    player = models.ForeignKey(User, null=True, blank=True, on_delete=models.SET_NULL)
