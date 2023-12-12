@@ -322,8 +322,6 @@ def invite_player_view(request):
     payload['data'] = data
     return Response(payload, status=status.HTTP_201_CREATED)
 
-
-
 @api_view(['POST', ])
 @permission_classes([IsAuthenticated, ])
 @authentication_classes([TokenAuthentication, ])
@@ -334,24 +332,24 @@ def invite_player_email_view(request):
 
     if request.method == 'POST':
         user_id = request.data.get('user_id', None)
-        invited_player_email = request.data.get('user_id', None)
+        invited_player_email = request.data.get('invited_player_email', "").lower()
         team_id = request.data.get('team_id', None)
 
         if not user_id:
             errors["user_id"] = ['User ID is required']
 
+        if not team_id:
+            errors["team_id"] = ['Team ID is required']
 
         if not invited_player_email:
             errors["invited_player_email"] = ['Invited player email is required']
-
-        if not team_id:
-            errors["team_id"] = ['Team ID is required']
 
 
         try:
             user = User.objects.get(user_id=user_id)
         except User.DoesNotExist:
             errors["user_id"] = ['User does not exist.']
+
 #
         try:
             team = Team.objects.get(team_id=team_id)
@@ -368,7 +366,6 @@ def invite_player_email_view(request):
             team=team,
             player_email=invited_player_email,
             inviter=user,
-
         )
 
 
@@ -376,8 +373,8 @@ def invite_player_email_view(request):
         context = {
             'team_name': team.team_name,
             'email': user.email,
-            'first_name': user.first_name,
-            'invited_player_email': invited_player_email
+            'inv_email': invited_player_email,
+            'inviter': user.first_name
         }
 
         txt_ = get_template("teams/invite_player_email.txt").render(context)
@@ -385,7 +382,7 @@ def invite_player_email_view(request):
 
         subject = 'TEAM INVITATION'
         from_email = settings.DEFAULT_FROM_EMAIL
-        recipient_list = [user.email]
+        recipient_list = [invited_player_email]
 
         sent_mail = send_mail(
             subject,
@@ -406,4 +403,6 @@ def invite_player_email_view(request):
     payload['message'] = "Successful"
     payload['data'] = data
     return Response(payload, status=status.HTTP_201_CREATED)
+
+
 
