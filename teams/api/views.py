@@ -16,7 +16,7 @@ from connects.models import Connect
 from events.api.serializers import EventSerializers
 from events.models import Event
 from teams.api.serializers import TeamSerializers, AllTeamsSerializers
-from teams.models import Team, TeamPlayerInvite, TeamPlayerInviteEmail
+from teams.models import Team, TeamPlayerInvite, TeamPlayerInviteEmail, TeamMember
 from user_profile.models import UserProfile
 
 User = get_user_model()
@@ -232,6 +232,58 @@ def create_team(request):
         payload['message'] = "Errors"
         payload['errors'] = errors
         return Response(payload, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+@authentication_classes([TokenAuthentication])
+def join_team(request):
+    payload = {}
+    errors = {}
+    data = {}
+
+    if request.method == 'POST':
+        user_id = request.data.get('user_id')
+        team_id = request.data.get('team_id')
+
+        if not user_id:
+            errors["user_id"] = ['User ID is required']
+        if not team_id:
+            errors["team_id"] = ['Team ID is required']
+
+        try:
+            user = User.objects.get(user_id=user_id)
+        except User.DoesNotExist:
+            errors["user_id"] = ['User does not exist.']
+        #
+        try:
+            team = Team.objects.get(team_id=team_id)
+        except Team.DoesNotExist:
+            errors["team_id"] = ['Team does not exist.']
+
+
+        team_member = TeamMember.objects.create(
+            team=team,
+            member=user
+        )
+
+        new_activity = AllActivity.objects.create(
+            user=user,
+            subject="Join Team",
+            body=user.email + " Just joined " + team.team_name
+        )
+        new_activity.save()
+
+        if errors:
+            payload['message'] = "Errors"
+            payload['errors'] = errors
+            return Response(payload, status=status.HTTP_400_BAD_REQUEST)
+
+    payload['message'] = "Successful"
+    payload['data'] = data
+    return Response(payload, status=status.HTTP_201_CREATED)
 
 
 

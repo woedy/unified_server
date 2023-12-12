@@ -70,7 +70,8 @@ pre_save.connect(pre_save_team_id_receiver, sender=Team)
 class TeamMember(models.Model):
     team = models.ForeignKey(Team, on_delete=models.CASCADE, related_name="team_members")
     member = models.ForeignKey(User, models.CASCADE, related_name="team_member")
-
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
 
 class TeamGallery(models.Model):
