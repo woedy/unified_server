@@ -1,5 +1,8 @@
+from datetime import datetime
+
 from django.contrib.auth import get_user_model
 from django.core.serializers import serialize
+from django.utils.timezone import make_aware
 from rest_framework import status
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.decorators import authentication_classes, permission_classes, api_view
@@ -12,6 +15,7 @@ from events.api.serializers import EventSerializers, LeagueSerializers, AllLeagu
     LeagueEventSerializers
 from events.models import Event, League
 from games.models import Game, Round
+from teams.models import Team
 from user_profile.models import UserProfile
 
 User = get_user_model()
@@ -55,6 +59,8 @@ def get_all_games_data(request):
 
 
         payload['message'] = "Successful"
+
+
         payload['data'] = data
 
     return Response(payload)
@@ -96,7 +102,9 @@ def games_brackets_view(request):
 
             for round_obj in all_rounds:
                 round_data = {
-                    'round_number': round_obj.name,
+                    'round_id': round_obj.round_id,
+                    'round_number': round_obj.number,
+                    'round_name': round_obj.name,
                     'matches': []
                 }
 
@@ -131,11 +139,20 @@ def add_rounds_to_event(request):
     errors = {}
 
     if request.method == 'POST':
+        user_id = request.data.get('user_id')
         event_id = request.data.get('event_id')
-        round_data = request.data.get('rounds')  # Assuming rounds data is provided in a suitable format
+        round_data = request.data.get('rounds')
+
+        if not user_id:
+            errors["user_id"] = ['User ID is required']
 
         if not event_id:
             errors["event_id"] = ['Event ID is required']
+
+        try:
+            user = User.objects.get(user_id=user_id)
+        except User.DoesNotExist:
+            errors["user_id"] = ['User does not exist.']
 
         try:
             event = Event.objects.get(event_id=event_id)
@@ -143,21 +160,86 @@ def add_rounds_to_event(request):
             errors["event_id"] = ['Event does not exist.']
 
         if not errors:
-            for round_info in round_data:
-                round_number = round_info.get('round_number')
-                round_name = round_info.get('round_name')
-                # Other round data retrieval from round_info
+            round_number = round_data['round_number']
+            round_name = round_data['round_name']
+            start_date_str = round_data['start_date']
+            end_date_str = round_data['end_date']
 
-                # Create the round and associate it with the event
-                round_obj = Round.objects.create(
-                    event=event,
-                    name=round_name,
-                    number=round_number,
+            # Convert string dates to datetime objects
+            #start_date = make_aware(datetime.fromisoformat(start_date_str))
+            #end_date = make_aware(datetime.fromisoformat(end_date_str))
+
+            # Create the round and associate it with the event
+            round_obj = Round.objects.create(
+                event=event,
+                name=round_name,
+                number=round_number,
+                start_date=start_date_str,
+                end_date=end_date_str,
+                # Set other attributes accordingly
+            )
+            round_obj.save()
+
+            data['message'] = 'Round added successfully'
+
+    if errors:
+        payload['message'] = "Errors"
+        payload['errors'] = errors
+        return Response(payload, status=status.HTTP_400_BAD_REQUEST)
+
+    payload['message'] = "Successful"
+    payload['data'] = data
+    return Response(payload)
+
+
+@api_view(['POST', ])
+@permission_classes([IsAuthenticated, ])
+@authentication_classes([TokenAuthentication, ])
+def add_matches_to_round(request):
+    payload = {}
+    data = {}
+    errors = {}
+
+    if request.method == 'POST':
+        user_id = request.data.get('user_id')
+        round_id = request.data.get('round_id')
+        matches_data = request.data.get('matches')
+
+        if not user_id:
+            errors["user_id"] = ['User ID is required']
+
+        if not round_id:
+            errors["round_id"] = ['Round ID is required']
+
+        try:
+            user = User.objects.get(user_id=user_id)
+        except User.DoesNotExist:
+            errors["user_id"] = ['User does not exist.']
+
+        try:
+            round_obj = Round.objects.get(round_id=round_id)
+        except Round.DoesNotExist:
+            errors["round_id"] = ['Round does not exist.']
+
+        if not errors:
+            for match_data in matches_data:
+                team_1_id = match_data['team_1_id']
+                team_2_id = match_data['team_2_id']
+
+                # Fetch Team objects based on team names
+                team1 = Team.objects.get(team_id=team_1_id)
+                team2 = Team.objects.get(team_id=team_2_id)
+
+                # Create the match and associate it with the round
+                match = Game.objects.create(
+                    round=round_obj,
+                    home_team=team1,
+                    away_team=team2,
                     # Set other attributes accordingly
                 )
-                round_obj.save()
+                match.save()
 
-            data['message'] = 'Rounds added successfully'
+            data['message'] = 'Matches added to the round successfully'
 
     if errors:
         payload['message'] = "Errors"

@@ -43,6 +43,35 @@ def unique_event_id_generator(instance):
     if qs_exists:
         return None
     return event_id
+def unique_game_id_generator(instance):
+    """
+    This is for a game_id field
+    :param instance:
+    :return:
+    """
+    size = random.randint(5, 7)
+    game_id = "UPA-" + random_string_generator(size=size, chars=string.ascii_uppercase + string.digits) + "-(gm)"
+
+    Klass = instance.__class__
+    qs_exists = Klass.objects.filter(game_id=game_id).exists()
+    if qs_exists:
+        return None
+    return game_id
+
+def unique_round_id_generator(instance):
+    """
+    This is for a round_id field
+    :param instance:
+    :return:
+    """
+    size = random.randint(5, 7)
+    round_id = "UPA-" + random_string_generator(size=size, chars=string.ascii_uppercase + string.digits) + "-(rd)"
+
+    Klass = instance.__class__
+    qs_exists = Klass.objects.filter(round_id=round_id).exists()
+    if qs_exists:
+        return None
+    return round_id
 
 
 def unique_league_id_generator(instance):
