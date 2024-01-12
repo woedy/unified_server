@@ -44,7 +44,7 @@ class LeagueEventSerializers(serializers.ModelSerializer):
             'event_cancelled_at',
             'event_creator',
             'event_consoles',
-            'event_teams',
+            #'event_teams',
 
             'event_standings',
             'event_leaderboards',

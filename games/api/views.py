@@ -9,14 +9,10 @@ from rest_framework.decorators import authentication_classes, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from connects.api.serializers import ConnectSerializers
-from connects.models import Connect
-from events.api.serializers import EventSerializers, LeagueSerializers, AllLeagueSerializers, AllEventSerializers, \
-    LeagueEventSerializers
-from events.models import Event, League
+
+from events.models import Event
 from games.models import Game, Round
 from teams.models import Team
-from user_profile.models import UserProfile
 
 User = get_user_model()
 

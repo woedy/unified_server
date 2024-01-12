@@ -18,6 +18,74 @@ from user_profile.models import UserProfile
 User = get_user_model()
 
 
+
+@api_view(['POST', ])
+@permission_classes([IsAuthenticated, ])
+@authentication_classes([TokenAuthentication, ])
+def add_event(request):
+    payload = {}
+    errors = {}
+    data = {}
+
+    if request.method == 'POST':
+
+        league_id = request.data.get('league_id', None)
+        event_title = request.data.get('event_title', None)
+        event_description = request.data.get('event_description', None)
+        event_type = request.data.get('event_type', None)
+        price = request.data.get('price', None)
+        sign_up_fee = request.data.get('sign_up_fee', None)
+        event_cover = request.data.get('event_cover', None)
+        event_consoles = request.data.get('event_consoles', None)
+        event_start = request.data.get('event_start', None)
+        event_end = request.data.get('event_end', None)
+        event_creator = request.data.get('event_creator', None)
+
+        if not league_id:
+            errors["league_id"] = ['League id is required']
+
+        if not event_title:
+            errors["event_title"] = ['Event title is required']
+
+        if not event_type:
+            errors["event_type"] = ['Event type is required']
+
+        try:
+            creator = User.objects.get(user_id=event_creator)
+        except User.DoesNotExist:
+            errors["event_creator"] = ['Event creator user object does not exist.']
+
+        try:
+            league = League.objects.get(league_id=league_id)
+        except League.DoesNotExist:
+            errors["league_id"] = ['League does not exist.']
+
+
+    if errors:
+        payload['message'] = "Errors"
+        payload['errors'] = errors
+        return Response(payload, status=status.HTTP_400_BAD_REQUEST)
+
+    new_event = Event.objects.create(
+        league=league,
+        event_title=event_title,
+        event_description=event_description,
+        event_type=event_type,
+        event_consoles=event_consoles,
+        price=price,
+        sign_up_fee=sign_up_fee,
+        event_cover=event_cover,
+        event_start=event_start,
+        event_end=event_end,
+        event_creator=creator,
+    )
+
+
+    payload['message'] = "Successful"
+    payload['data'] = data
+    return Response(payload, status=status.HTTP_201_CREATED)
+
+
 @api_view(['POST', ])
 @permission_classes([IsAuthenticated, ])
 @authentication_classes([TokenAuthentication, ])
@@ -192,6 +260,53 @@ def get_event_details_data(request):
     return Response(payload)
 
 
+@api_view(['POST', ])
+@permission_classes([IsAuthenticated, ])
+@authentication_classes([TokenAuthentication, ])
+def add_leagues_data(request):
+    payload = {}
+    errors = {}
+    data = {}
+
+    if request.method == 'POST':
+
+        league_name = request.data.get('league_name', None)
+        league_type = request.data.get('league_type', None)
+        league_logo = request.data.get('league_logo', None)
+        league_cover = request.data.get('league_cover', None)
+        league_about = request.data.get('league_about', None)
+        league_manager = request.data.get('league_manager', None)
+
+        if not league_name:
+            errors["league_name"] = ['League name is required']
+
+        if not league_type:
+            errors["league_type"] = ['League type is required']
+
+        try:
+            manager = User.objects.get(user_id=league_manager)
+        except User.DoesNotExist:
+            errors["league_manager"] = ['Manager user object does not exist.']
+
+
+    if errors:
+        payload['message'] = "Errors"
+        payload['errors'] = errors
+        return Response(payload, status=status.HTTP_400_BAD_REQUEST)
+
+    new_league = League.objects.create(
+        league_name=league_name,
+        league_type=league_type,
+        league_logo=league_logo,
+        league_cover=league_cover,
+        league_about=league_about,
+        league_manager=manager
+    )
+
+
+    payload['message'] = "Successful"
+    payload['data'] = data
+    return Response(payload, status=status.HTTP_201_CREATED)
 
 @api_view(['GET', ])
 @permission_classes([IsAuthenticated, ])

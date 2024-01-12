@@ -5,12 +5,7 @@ from rest_framework.decorators import authentication_classes, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from connects.api.serializers import ConnectSerializers
-from connects.models import Connect
-from events.api.serializers import EventSerializers, LeagueSerializers, AllLeagueSerializers, AllEventSerializers, \
-    LeagueEventSerializers
-from events.models import Event, League
-from user_profile.models import UserProfile
+from players.api.serializers import PlayerSerializers
 
 User = get_user_model()
 
@@ -37,6 +32,13 @@ def get_all_players(request):
             user = User.objects.get(user_id=user_id)
         except User.DoesNotExist:
             errors["user_id"] = ['User does not exist.']
+
+
+        _player = User.objects.all()
+        player_serializer = PlayerSerializers(_player, many=True)
+        if player_serializer:
+            players = player_serializer.data
+
 
 
         if errors:

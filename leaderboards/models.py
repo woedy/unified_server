@@ -29,3 +29,6 @@ class Award(models.Model):
     winner = models.ForeignKey(User, on_delete=models.CASCADE, null=True,  blank=True, related_name='award_winner')
     title = models.CharField(max_length=255, blank=True, null=True)
     description = models.TextField(blank=True, null=True)
+
+
+

@@ -39,12 +39,15 @@ def get_league_event_details_data(request):
         except User.DoesNotExist:
             errors["user_id"] = ['User does not exist.']
 
-        event_detail = Event.objects.get(event_id=event_id)
-        event_detail_serializer = LeagueEventSerializers(event_detail, many=False)
-        if event_detail_serializer:
-            event_detail_serializer = event_detail_serializer.data
+        try:
+            event_detail = Event.objects.get(event_id=event_id)
+            event_detail_serializer = LeagueEventSerializers(event_detail, many=False)
+            if event_detail_serializer:
+                event_detail_serializer = event_detail_serializer.data
 
-        data["event_detail"] = event_detail_serializer
+            data["event_detail"] = event_detail_serializer
+        except Event.DoesNotExist:
+            errors["event_id"] = ['Event does not exist.']
 
         if errors:
             payload['message'] = "Errors"

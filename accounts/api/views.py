@@ -3,7 +3,6 @@ import re
 from django.conf import settings
 from django.contrib.auth import get_user_model, authenticate
 from django.core.mail import send_mail
-from django.db import IntegrityError
 from django.template.loader import get_template
 from rest_framework import status
 from rest_framework.authentication import TokenAuthentication
@@ -118,8 +117,8 @@ def register_user(request):
             'first_name': user.first_name
         }
 
-        txt_ = get_template("registration/emails/invite_player.txt").render(context)
-        html_ = get_template("registration/emails/invite_player.html").render(context)
+        txt_ = get_template("registration/emails/verify.html").render(context)
+        html_ = get_template("registration/emails/verify.txt").render(context)
 
         subject = 'EMAIL CONFIRMATION CODE'
         from_email = settings.DEFAULT_FROM_EMAIL
@@ -391,35 +390,32 @@ def connects_endpoint(request):
             errors["user_id"] = ['User Id is required.']
 
         # Retrieve the user
-        user = User.objects.get(user_id=user_id)
+
 
         try:
+            user = User.objects.get(user_id=user_id)
             user_profile = UserProfile.objects.get(user=user)
-        except UserProfile.DoesNotExist:
-            user_profile = UserProfile.objects.create(user=user)
 
-        user_profile.photo = photo
-        user_profile.save()
-#
-        for connect in selected_connects:
-            user_connect = Connect.objects.create(
-                user=user,
-                connect_name=connect,
-            )
+            user_profile.photo = photo
+            user_profile.save()
 
-        try:
+            for connect in selected_connects:
+                user_connect = Connect.objects.create(
+                    user=user,
+                    connect_name=connect,
+                )
+
             token = Token.objects.get(user=user)
-        except Token.DoesNotExist:
-            token = Token.objects.create(user=user)
 
-        data["user_id"] = user.user_id
-        data["email"] = user.email
-        data["first_name"] = user.first_name
-        data["last_name"] = user.last_name
-        data["token"] = token.key
+            data["user_id"] = user.user_id
+            data["email"] = user.email
+            data["first_name"] = user.first_name
+            data["last_name"] = user.last_name
+            data["token"] = token.key
 
 
-
+        except User.DoesNotExist:
+            errors["user_id"] = ['User does not exist.']
 
     if errors:
         payload['message'] = "Errors"
