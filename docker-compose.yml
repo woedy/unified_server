@@ -7,7 +7,7 @@ services:
     container_name: redis_d
 
   # Database Postgres
-  db:
+  api-unifiedpro-db:
     image: postgres
     volumes:
       - ./data/db:/var/lib/postgresql/data
@@ -18,18 +18,17 @@ services:
     container_name: postgres_db_d
 
   # Django Application
-  app4:
+  api-unifiedpro-app:
     build: .
     volumes:
       - .:/django4
       - ./static_cdn:/var/lib/static_cdn
     ports:
-      - 8484:8484
-    image: app4:django
+      - "8484:8484"
     container_name: django4_app
     command: python manage.py runserver 0.0.0.0:8484
     depends_on:
-      - db
+      - api-unifiedpro-db
 
   # Celery Worker
   celery:
@@ -41,9 +40,9 @@ services:
       - .:/django4
     container_name: celery_d
     depends_on:
-      - db
+      - api-unifiedpro-db
       - redis
-      - app4
+      - api-unifiedpro-app
 
   # Celery Beat
   celery-beat:
@@ -55,9 +54,16 @@ services:
       - .:/django4
     container_name: celery_beat_d
     depends_on:
-      - db
+      - api-unifiedpro-db
       - redis
-      - app4
+      - api-unifiedpro-app
 
 volumes:
   static_cdn:
+
+
+#networks:
+# default:
+#    external: true
+#    name: docker-nginx-proxy-manager
+

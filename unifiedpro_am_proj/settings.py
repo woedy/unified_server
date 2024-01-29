@@ -25,7 +25,7 @@ SECRET_KEY = "django-insecure-!=v^lii$s4@-fe$(b-5qioc99a%c#y4j=##8j7ruzytfvoq1=^
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["143.42.21.193", "127.0.0.1", "0.0.0.0", "localhost"]
+ALLOWED_HOSTS = ["143.42.21.193", "127.0.0.1", "0.0.0.0", "localhost", "unifiedpro.zuludesks.com"]
 
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'box.teamalfy.co.uk'
@@ -107,12 +107,12 @@ ASGI_APPLICATION = "unifiedpro_am_proj.asgi.application"
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
-    }
-}
+# DATABASES = {
+#     "default": {
+#         "ENGINE": "django.db.backends.sqlite3",
+#         "NAME": BASE_DIR / "db.sqlite3",
+#     }
+# }
 
 
 # DATABASES = {
@@ -125,6 +125,18 @@ DATABASES = {
 #         'PORT': 5432,
 #      }
 # }
+
+
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'police_app_pro',
+        'USER': 'police_app_pro',
+        'PASSWORD': 'police_app_pro',
+        'HOST': 'api-unifiedpro-db',
+        'PORT': 5432,
+     }
+}
 
 
 
@@ -223,5 +235,7 @@ CHANNEL_LAYERS = {
 
 
 CORS_ALLOW_ALL_ORIGINS = True
-CORS_ALLOWED_ORIGINS = []
+CORS_ALLOWED_ORIGINS = [
+
+]
 
