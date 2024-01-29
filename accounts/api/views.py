@@ -345,6 +345,7 @@ class UserLogin(APIView):
         data["email"] = user.email
         data["first_name"] = user.first_name
         data["last_name"] = user.last_name
+        data["photo"] = user_profile.photo.url
         data["token"] = token.key
 
         payload['message'] = "Successful"

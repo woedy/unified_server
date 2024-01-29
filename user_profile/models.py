@@ -97,3 +97,15 @@ def post_save_personal_info(sender, instance, *args, **kwargs):
         instance.photo = get_default_profile_image()
 
 post_save.connect(post_save_personal_info, sender=UserProfile)
+
+
+CONSOLE_CHOICES = (
+    ('Xbox', 'Xbox'),
+    ('Playstation', 'Playstation'),
+)
+
+
+class GamerTag(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user_gamer_tag')
+    tag_name = models.CharField(null=True, blank=True, max_length=255)
+    console_type = models.CharField(choices=CONSOLE_CHOICES, null=True, blank=True, max_length=255)

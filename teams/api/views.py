@@ -338,6 +338,12 @@ def invite_player_view(request):
             inviter=user,
         )
 
+        team_member = TeamMember.objects.create(
+            team=team,
+            member=user,
+            is_invited=True
+        )
+
 
 
         context = {

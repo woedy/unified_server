@@ -7,7 +7,7 @@ from rest_framework.response import Response
 
 from connects.api.serializers import ConnectSerializers
 from connects.models import Connect
-from user_profile.models import UserProfile
+from user_profile.models import UserProfile, GamerTag
 
 User = get_user_model()
 
@@ -75,3 +75,53 @@ def get_user_profile(request):
         payload['data'] = data
 
     return Response(payload)
+
+
+
+
+@api_view(['POST', ])
+@permission_classes([IsAuthenticated, ])
+@authentication_classes([TokenAuthentication, ])
+def add_gamer_tag(request):
+    payload = {}
+    errors = {}
+    data = {}
+
+    if request.method == 'POST':
+
+        user_id = request.data.get('user_id', None)
+        tag_name = request.data.get('tag_name', None)
+        console_type = request.data.get('console_type', None)
+
+
+        if not user_id:
+            errors["user_id"] = ['User id is required']
+
+        if not tag_name:
+            errors["tag_name"] = ['Tag name is required']
+
+        if not console_type:
+            errors["console_type"] = ['Console type is required']
+
+        try:
+            user = User.objects.get(user_id=user_id)
+        except User.DoesNotExist:
+            errors["user_id"] = ['User does not exist.']
+
+
+    if errors:
+        payload['message'] = "Errors"
+        payload['errors'] = errors
+        return Response(payload, status=status.HTTP_400_BAD_REQUEST)
+
+    game_tag = GamerTag.objects.create(
+        user=user,
+        tag_name=tag_name,
+        console_type=console_type
+    )
+
+
+    payload['message'] = "Successful"
+    payload['data'] = data
+    return Response(payload, status=status.HTTP_201_CREATED)
+

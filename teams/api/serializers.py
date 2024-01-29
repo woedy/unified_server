@@ -4,7 +4,7 @@ from rest_framework import serializers
 from connects.models import Connect
 from events.models import Event
 from teams.models import Team, TeamMember
-from user_profile.models import UserProfile
+from user_profile.models import UserProfile, GamerTag
 
 User = get_user_model()
 
@@ -16,12 +16,20 @@ class TeamOwnerProfileSerializers(serializers.ModelSerializer):
         fields = ['photo',]
 
 
+class TeamOwnerGamerTagSerializers(serializers.ModelSerializer):
+
+    class Meta:
+        model = GamerTag
+        fields = ['tag_name','console_type']
+
+
 class TeamOwnerSerializers(serializers.ModelSerializer):
     personal_info = TeamOwnerProfileSerializers(many=False)
+    user_gamer_tag = TeamOwnerGamerTagSerializers(many=True)
 
     class Meta:
         model = User
-        fields = ['user_id', 'first_name', 'last_name', 'personal_info']
+        fields = ['user_id', 'first_name', 'last_name', 'personal_info', 'user_gamer_tag']
 
 
 
@@ -30,7 +38,7 @@ class TeamMemberSerializers(serializers.ModelSerializer):
 
     class Meta:
         model = TeamMember
-        fields = ['id', 'member', ]
+        fields = ['id', 'member', 'is_invited']
 
 
 

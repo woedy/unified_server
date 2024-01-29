@@ -18,16 +18,16 @@ services:
     container_name: postgres_db_d
 
   # Django Application
-  app3:
+  app4:
     build: .
     volumes:
       - .:/django4
       - ./static_cdn:/var/lib/static_cdn
     ports:
-      - 84:84
+      - 8484:8484
     image: app4:django
     container_name: django4_app
-    command: python manage.py runserver 0.0.0.0:84
+    command: python manage.py runserver 0.0.0.0:8484
     depends_on:
       - db
 
