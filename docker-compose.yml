@@ -11,21 +11,25 @@ services:
     image: postgres
     volumes:
       - ./data/db:/var/lib/postgresql/data
+    #build: .
     environment:
       - POSTGRES_DB=unifiedpro_am_proj
       - POSTGRES_USER=unifiedpro_am_proj
       - POSTGRES_PASSWORD=unifiedpro_am_proj
-    container_name: postgres_db_d
+    ports:
+      - "54322:5432"
+    #container_name: postgres_db_d
 
   # Django Application
   api-unifiedpro-app:
+    image: api-unifiedpro-app:django
     build: .
     volumes:
       - .:/django4
       - ./static_cdn:/var/lib/static_cdn
     ports:
       - "8484:8484"
-    container_name: django4_app
+    #container_name: django4_app
     command: python manage.py runserver 0.0.0.0:8484
     depends_on:
       - api-unifiedpro-db

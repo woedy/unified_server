@@ -130,9 +130,9 @@ ASGI_APPLICATION = "unifiedpro_am_proj.asgi.application"
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'police_app_pro',
-        'USER': 'police_app_pro',
-        'PASSWORD': 'police_app_pro',
+        'NAME': 'unifiedpro_am_proj',
+        'USER': 'unifiedpro_am_proj',
+        'PASSWORD': 'unifiedpro_am_proj',
         'HOST': 'api-unifiedpro-db',
         'PORT': 5432,
      }
